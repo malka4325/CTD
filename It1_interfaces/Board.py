@@ -15,4 +15,12 @@ class Board:
     # convenience, not required by dataclass
     def clone(self) -> "Board":
         """Clone the board with a copy of the image."""
-        pass
+        return Board(
+            cell_H_pix=self.cell_H_pix,
+            cell_W_pix=self.cell_W_pix,
+            cell_H_m=self.cell_H_m,
+            cell_W_m=self.cell_W_m,
+            W_cells=self.W_cells,
+            H_cells=self.H_cells,
+            img=self.img.copy()
+        )

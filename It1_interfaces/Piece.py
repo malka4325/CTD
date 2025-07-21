@@ -7,6 +7,7 @@ import cv2
 class Piece:
     def __init__(self, piece_id: str, init_state: State):
         """Initialize a piece with ID and initial state."""
+        self._id = piece_id
         self._state = init_state
         pass
 
@@ -18,12 +19,13 @@ class Piece:
         pass
 
     def reset(self, start_ms: int):
-        self._state.reset()
+        self._state.reset(start_ms)
         """Reset the piece to idle state."""
         pass
 
     def update(self, now_ms: int):
         """Update the piece state based on current time."""
+        self._state.update(now_ms)
         pass
 
     def draw_on_board(self, board, now_ms: int):

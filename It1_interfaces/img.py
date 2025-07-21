@@ -85,6 +85,13 @@ class Img:
         cv2.putText(self.img, txt, (x, y),
                     cv2.FONT_HERSHEY_SIMPLEX, font_size,
                     color, thickness, cv2.LINE_AA)
+    def copy(self) -> Img:
+        """Return a deep copy of the image."""
+        new_img = Img()
+        if self.img is not None:
+            new_img.img = self.img.copy()
+        return new_img
+
 
     def show(self):
         if self.img is None:
