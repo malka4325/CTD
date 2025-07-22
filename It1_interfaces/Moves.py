@@ -5,23 +5,30 @@ from typing import List, Tuple
 
 class Moves:
 
-    def __init__(self, txt_path: pathlib.Path, dims: Tuple[int, int]):
+    def __init__(self, txt_path: str, dims: Tuple[int, int]):
         """Initialize moves with rules from text file and board dimensions."""
         self.board_height, self.board_width = dims
-        self.moves = []
-        self.moves: List[Tuple[int, int]] = []  # רשימת וקטורים חוקיים לתנועה
-        
+        self.moves: List[Tuple[int, int]] = []
+
         with open(txt_path, 'r') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):
                     continue
-                
+
                 parts = line.split(',')
                 if len(parts) != 2:
                     raise ValueError(f"Invalid move format: {line}")
-                
-                dx, dy = int(parts[0]), int(parts[1])
+
+                # ננקה חלקים לא מספריים לאחר הנקודהיים, אם יש
+                dx_str = parts[0].split(':')[0].strip()
+                dy_str = parts[1].split(':')[0].strip()
+
+                try:
+                    dx, dy = int(dx_str), int(dy_str)
+                except ValueError:
+                    raise ValueError(f"Invalid integer in line: {line}")
+
                 self.moves.append((dx, dy))
     
     def is_move_valid(self, start_pos: Tuple[int, int], end_pos: Tuple[int, int]) -> bool:

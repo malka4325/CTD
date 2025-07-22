@@ -146,3 +146,20 @@ class Graphics:
         if self.loop:
             return False
         return not self.is_playing and self.current_frame == len(self.sprites) - 1
+    def draw(self, target_img: Img, cell: Tuple[int, int]):
+        """
+        צייר את הפריים הנוכחי של האנימציה על תמונה נתונה, במקום התואם לתא בלוח.
+
+        Parameters
+        ----------
+        target_img : Img
+            התמונה שעליה תתבצע הצביעה.
+        cell : tuple[int, int]
+            מיקום התא בלוח (x, y) שבו יש לשבץ את הדמות.
+        """
+        x_cell, y_cell = cell
+        # x_pix = x_cell * self.board.cell_W_pix
+        # y_pix = y_cell * self.board.cell_H_pix
+
+        sprite_img = self.get_img()
+        sprite_img.draw_on(target_img,   x_cell, y_cell)

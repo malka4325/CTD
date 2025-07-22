@@ -12,6 +12,29 @@ class Piece:
         self._state = init_state
         self._current_cell = None
         self._last_update_time = None
+    def set_current_cell(self, cell: Tuple[int, int], now_ms: int):
+        """Set the current cell of the piece and update its state."""
+        self._current_cell = cell
+        self._state.reset(Command(
+            timestamp=now_ms,
+            piece_id=self.piece_id,
+            type="reset",
+            params=[cell]
+        ))
+        self._last_update_time = now_ms 
+    def get_current_cell(self) -> Optional[Tuple[int, int]]:
+        """Return the current cell of the piece."""
+        return self._current_cell
+    
+    def clone(self) -> "Piece":
+        """Return a deep copy of this piece."""
+        cloned_piece = Piece(
+            piece_id=self.piece_id,
+            init_state=self._state.clone()
+        )
+        cloned_piece._current_cell = self._current_cell
+        cloned_piece._last_update_time = self._last_update_time
+        return cloned_piece
 
     def on_command(self, cmd: Command, now_ms: int):
         """Handle a command for this piece."""
@@ -67,16 +90,18 @@ class Piece:
         physics = self._state.get_physics()
         
         if graphics and physics:
-            draw_pos = physics.get_draw_position()
-            graphics.draw(board.img.frame, draw_pos)
+            draw_pos = physics.get_draw_position(now_ms)
+           # cooldown_ratio = self._state.get_cooldown_ratio(now_ms)
+
+            graphics.draw(board.img, draw_pos)
 
             # אופציונלי: הוספת צל קירור אם יש remaining_cooldown
-            cooldown_ratio = self._state.get_cooldown_ratio(now_ms)
-            if cooldown_ratio > 0:
-                overlay = graphics.get_cooldown_overlay(cooldown_ratio)
-                x, y = draw_pos
-                h, w = overlay.shape[:2]
-                board.img.frame[y:y+h, x:x+w] = cv2.addWeighted(
-                    board.img.frame[y:y+h, x:x+w], 0.5,
-                    overlay, 0.5, 0
-                )
+            # cooldown_ratio = self._state.get_cooldown_ratio(now_ms)
+            # if cooldown_ratio > 0:
+            #     overlay = graphics.get_cooldown_overlay(cooldown_ratio)
+            #     x, y = draw_pos
+            #     h, w = overlay.shape[:2]
+            #     board.img.frame[y:y+h, x:x+w] = cv2.addWeighted(
+            #         board.img.frame[y:y+h, x:x+w], 0.5,
+            #         overlay, 0.5, 0
+            #     )

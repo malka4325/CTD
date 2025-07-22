@@ -7,16 +7,18 @@ from Moves import Moves
 from PhysicsFactory import PhysicsFactory
 from Piece import Piece
 from State import State
-
+from Graphics import Graphics
+from Physics import Physics
 
 class PieceFactory:
-    def __init__(self, board: Board, pieces_root: pathlib.Path):
+    def __init__(self, board: Board, pieces_root: str | pathlib.Path):
         """Initialize piece factory with board and 
-        generates the library of piece templates from the pieces directory.."""
+        generates the library of piece templates from the pieces directory."""
         self.board = board
-        self.pieces_root = pieces_root # root folder containing all piece folders
+        self.pieces_root = pathlib.Path(pieces_root)  # ודא המרה ל־Path
         self.piece_templates: Dict[str, Piece] = {}  # piece_id -> Piece
         self._load_piece_templates()
+
     
     def _load_piece_templates(self):
         """Load all piece templates from the pieces directory."""
@@ -36,62 +38,58 @@ class PieceFactory:
 
     def _build_state_machine(self, piece_dir: pathlib.Path) -> State:
         """Build the state machine for a piece from its directory."""
-        # קריאת הגדרות הפיס מהקובץ config.json
-        config_path = piece_dir / "config.json"
-        if not config_path.exists():
-            raise FileNotFoundError(f"Config file not found for piece {piece_dir.name}")
-        with open(config_path, "r") as f:
-            cfg = json.load(f)
-        # יצירת גרפיקה מהספרייה
-        sprites_dir = piece_dir / "sprites"
-        if not sprites_dir.exists():
-            raise FileNotFoundError(f"Sprites directory not found for piece {piece_dir.name}")
-        graphics = self._load_graphics(sprites_dir, cfg)
-        # יצירת פיזיקה מההגדרות
-        physics = self._load_physics(cfg)
-        # יצירת אובייקט מצב התחלתי
-        initial_state = State(graphics, physics)
-        # קריאת מהלכים מהקובץ moves.txt
+        
+        # טען את כל המהלכים מהקובץ הראשי
         moves_path = piece_dir / "moves.txt"
         if not moves_path.exists():
             raise FileNotFoundError(f"Moves file not found for piece {piece_dir.name}")
         moves = self._load_moves(moves_path)
-        # הגדרת המצב ההתחלתי עם המהלכים
-        initial_state.set_moves(moves)
-        # הגדרת המעברים בין המצבים
+
+        # טען את כל המצבים מתוך states/
         states_dir = piece_dir / "states"
         if not states_dir.exists():
             raise FileNotFoundError(f"States directory not found for piece {piece_dir.name}")
-        states: Dict[str, State] = {}  # שם מצב -> אובייקט מצב
+
+        states: Dict[str, State] = {}
+
         for state_folder in states_dir.iterdir():
             if not state_folder.is_dir():
                 continue
+
             state_name = state_folder.name
+
+            # טען קובץ config.json של המצב
             config_path = state_folder / "config.json"
             if not config_path.exists():
                 raise FileNotFoundError(f"Config file not found for state {state_name} in piece {piece_dir.name}")
             with open(config_path, "r") as f:
                 state_cfg = json.load(f)
+
+            # טען ספריית sprites
             sprites_dir = state_folder / "sprites"
             if not sprites_dir.exists():
                 raise FileNotFoundError(f"Sprites directory not found for state {state_name} in piece {piece_dir.name}")
+
             graphics = self._load_graphics(sprites_dir, state_cfg)
             physics = self._load_physics(state_cfg)
-            # יצירת אובייקט מצב
-            state = State(graphics, physics)
-            # הגדרת המהלכים למצב זה
+
+            state = State(graphics=graphics, physics=physics,moves = moves)
             state.set_moves(moves)
-            # הוספת המצב למילון
+
             states[state_name] = state
-        # הגדרת המעברים בין המצבים
+
+        # הגדרת המעברים בין כל המצבים (מעבר חופשי ממצב לכל מצב)
         for from_name, from_state in states.items():
             for to_name, to_state in states.items():
                 if from_name != to_name:
                     from_state.set_transition(to_name, to_state)
-        # נחזיר את המצב ההתחלתי (נניח "idle")
-        return states.get("idle", initial_state)  # אם אין מצב "idle", נחזיר את המצב ההתחלתי
 
-                
+        # החזר את מצב ברירת המחדל: idle
+        if "idle" not in states:
+            raise ValueError(f"No 'idle' state found for piece {piece_dir.name}")
+        
+        return states["idle"]
+
 
 
     def _load_moves(self, moves_path: pathlib.Path) -> Moves:
@@ -99,15 +97,17 @@ class PieceFactory:
         return Moves(moves_path, (self.board.H_cells, self.board.W_cells))  
     def _load_graphics(self, sprites_dir: pathlib.Path, cfg: Dict) -> Graphics:
         """Load graphics from a directory and configuration."""
-        return GraphicsFactory.create_graphics(sprites_dir, cfg["graphics"])
+        graphicsFactory = GraphicsFactory(self.board)
+        return graphicsFactory.load(sprites_dir=sprites_dir, cfg=cfg["graphics"])
     def _load_physics(self, cfg: Dict) -> Physics:
         """Load physics configuration."""
-        return PhysicsFactory.create(cfg["physics"], self.board)
+        physicsFactory = PhysicsFactory(self.board)
+        return physicsFactory.create(start_cell=[0,0],cfg=cfg["physics"])
 
 
 
     # PieceFactory.py  – replace create_piece(...)
-    def create_piece(self, p_type: str, cell: Tuple[int, int]) -> Piece:
+    def create_piece(self, p_type: str) -> Piece:
         """Create a piece of the specified type at the given cell."""
         piece_dir = self.pieces_root / p_type
         if not piece_dir.exists():
@@ -118,6 +118,6 @@ class PieceFactory:
 
         # צור את הפיס
         piece = Piece(p_type, initial_state)
-        piece.cell = cell  # הגדר את התא ההתחלתי
+        #piece.cell = cell  # הגדר את התא ההתחלתי
 
         return piece

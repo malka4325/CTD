@@ -67,9 +67,11 @@ class Img:
         H, W = other_img.img.shape[:2]
 
         if y + h > H or x + w > W:
+            print(f"Image size: {h}x{w}, Position: ({x}, {y}), Other image size: {H}x{W})")
             raise ValueError("Logo does not fit at the specified position.")
 
         roi = other_img.img[y:y + h, x:x + w]
+  
 
         if self.img.shape[2] == 4:
             b, g, r, a = cv2.split(self.img)

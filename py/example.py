@@ -4,7 +4,7 @@ from img import Img
 
 def main():
     # Adjust these paths to any test pictures you have
-    background ="../ board.png"
+    background =r"C:\Users\m0583\Desktop\bc\CTD25\board.png"
     logo = r"C:\Users\m0583\Desktop\bc\CTD25\pieces\QW\states\jump\sprites\2.png"
 
     canvas = Img().read(background)  # original size
