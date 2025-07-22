@@ -23,8 +23,8 @@ class State:
 
     def reset(self, cmd: Command):
         """Reset the state with a new command."""
-        self._graphics.reset()
-        self._physics.reset()
+        self._graphics.reset(cmd)
+        self._physics.reset(cmd)
         pass
 
     def update(self, now_ms: int) -> State:

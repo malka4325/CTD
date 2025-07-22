@@ -19,6 +19,7 @@ class Game:
     # ─── helpers ─────────────────────────────────────────────────────────────
     def game_time_ms(self) -> int:
         """Return the current game time in milliseconds."""
+        
         pass
 
     def clone_board(self) -> Board:
